@@ -52,12 +52,12 @@ function initialize() {
 
   var request = {
     location: chiswick,
-    radius: 1000,
+    radius: 5000,
     keyword: 'pub'
   };
   infowindow = new google.maps.InfoWindow();
   var service = new google.maps.places.PlacesService(map);
-  service.nearbySearch(request, callback);
+  service.radarSearch(request, callback);
 }
 
 function callback(results, status) {
@@ -76,7 +76,8 @@ function createMarker(place) {
     map: map,
     icon: {
       url: 'beer.png',
-     size: new google.maps.Size(32, 32)
+      size: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16)
     },
     position: place.geometry.location
   });
