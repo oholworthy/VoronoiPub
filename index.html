@@ -11,7 +11,33 @@
         padding: 0px
       }
     </style>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places"></script>
+    <style type="text/css">
+html, body{
+    margin: 0px;
+    padding: 0px;
+}
+html, body, #map_canvas {
+	width: 100%;
+	height: 100%;
+}
+
+.SvgOverlay {
+	position: relative;
+	width: 900px;
+	height: 600px;
+}
+
+.SvgOverlay svg {
+	position: absolute;
+	top: -4000px;
+	left: -4000px;
+	width: 8000px;
+	height: 8000px;
+}
+
+</style>
     <script>
 var map;
 var infowindow;
@@ -36,6 +62,7 @@ function initialize() {
 
 function callback(results, status) {
   if (status == google.maps.places.PlacesServiceStatus.OK) {
+      overlayVoronoi(map, results);
     for (var i = 0; i < results.length; i++) {
 		createMarker(results[i]);
 		console.log( "Found something at Lat: " + results[i].geometry.location.B + ", Long: " + results[i].geometry.location.k );
@@ -61,6 +88,74 @@ function createMarker(place) {
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
+
+
+function overlayVoronoi(map, pointdata) {
+
+	var overlay = new google.maps.OverlayView();
+
+	overlay.onAdd = function () {
+
+		var layer = d3.select(this.getPanes().overlayLayer).append("div").attr("class", "SvgOverlay");
+		var svg = layer.append("svg");
+		var svgoverlay = svg.append("g").attr("class", "AdminDivisions");
+
+		overlay.draw = function () {
+			var markerOverlay = this;
+			var overlayProjection = markerOverlay.getProjection();
+
+			var googleMapProjection = function (coordinates) {
+			    console.log("googleMapProjection");
+			    console.log(coordinates);
+				var googleCoordinates = new google.maps.LatLng(coordinates.k, coordinates.B);
+				var pixelCoordinates = overlayProjection.fromLatLngToDivPixel(googleCoordinates);
+				return [pixelCoordinates.x + 4000, pixelCoordinates.y + 4000];
+			}
+
+			var positions = [];
+
+			pointdata.forEach(function(d) {
+			    positions.push(googleMapProjection(d.geometry.location));
+			});
+
+			var polygons = d3.geom.voronoi(positions);
+
+			var pathAttr ={
+				"d":function(d, i) { return "M" + polygons[i].join("L") + "Z"},
+				stroke:"red",
+				fill:"none"
+			};
+
+			svgoverlay.selectAll("path")
+				.data(pointdata)
+				.attr(pathAttr)
+				.enter()
+				.append("svg:path")
+				.attr("class", "cell")
+				.attr(pathAttr)
+
+			var circleAttr = {
+				    "cx":function(d, i) { return positions[i][0]; },
+				    "cy":function(d, i) { return positions[i][1]; },
+				    "r":2,
+				    fill:"red"
+			}
+
+			svgoverlay.selectAll("circle")
+				.data(pointdata)
+				.attr(circleAttr)
+				.enter()
+				.append("svg:circle")
+				.attr(circleAttr)
+
+		};
+
+	};
+
+	overlay.setMap(map);
+
+
+};
 
     </script>
   </head>
