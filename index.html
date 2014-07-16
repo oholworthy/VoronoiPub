@@ -66,11 +66,11 @@ function doRequest() {
 
 function callback(results, status) {
   if (status == google.maps.places.PlacesServiceStatus.OK) {
-      overlayVoronoi(map, results);
     for (var i = 0; i < results.length; i++) {
 		createMarker(results[i]);
 		console.log( "Found something at Lat: " + results[i].geometry.location.B + ", Long: " + results[i].geometry.location.k );
     }
+      overlayVoronoi(map, results);
   }
 }
 
@@ -139,19 +139,6 @@ function overlayVoronoi(map, pointdata) {
 				.attr("class", "cell")
 				.attr(pathAttr)
 
-			var circleAttr = {
-				    "cx":function(d, i) { return positions[i][0]; },
-				    "cy":function(d, i) { return positions[i][1]; },
-				    "r":2,
-				    fill:"red"
-			}
-
-			svgoverlay.selectAll("circle")
-				.data(pointdata)
-				.attr(circleAttr)
-				.enter()
-				.append("svg:circle")
-				.attr(circleAttr)
 
 		};
 
