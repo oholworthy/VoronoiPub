@@ -41,15 +41,19 @@ html, body, #map_canvas {
     <script>
 var map;
 var infowindow;
+var chiswick = new google.maps.LatLng(51.495118, -0.273496);
+var overlay;
 
 function initialize() {
-  var chiswick = new google.maps.LatLng(51.495118, -0.273496);
-
   map = new google.maps.Map(document.getElementById('map-canvas'), {
     center: chiswick,
     zoom: 15
   });
 
+  doRequest();
+}
+
+function doRequest() {
   var request = {
     location: chiswick,
     radius: 5000,
@@ -93,7 +97,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
 
 function overlayVoronoi(map, pointdata) {
 
-	var overlay = new google.maps.OverlayView();
+	overlay = new google.maps.OverlayView();
 
 	overlay.onAdd = function () {
 
