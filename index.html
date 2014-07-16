@@ -37,6 +37,16 @@ html, body, #map_canvas {
 	height: 8000px;
 }
 
+.q0-9 { fill: rgb(197,27,125); }
+.q1-9 { fill: rgb(222,119,174); }
+.q2-9 { fill: rgb(241,182,218); }
+.q3-9 { fill: rgb(253,224,239); }
+.q4-9 { fill: rgb(247,247,247); }
+.q5-9 { fill: rgb(230,245,208); }
+.q6-9 { fill: rgb(184,225,134); }
+.q7-9 { fill: rgb(127,188,65); }
+.q8-9 { fill: rgb(77,146,33); }
+
 </style>
     <script>
 var map;
@@ -127,8 +137,9 @@ function overlayVoronoi(map, pointdata) {
 
 			var pathAttr ={
 				"d":function(d, i) { return "M" + polygons[i].join("L") + "Z"},
-				stroke:"red",
-				fill:"none"
+			        opacity: 0.3,
+				stroke:"black",
+			        "stroke-width": 2
 			};
 
 			svgoverlay.selectAll("path")
@@ -137,6 +148,7 @@ function overlayVoronoi(map, pointdata) {
 				.enter()
 				.append("svg:path")
 				.attr("class", "cell")
+			        .attr("class", function(d, i) { return "q" + (i % 9) + "-9"; })
 				.attr(pathAttr)
 
 
@@ -148,6 +160,17 @@ function overlayVoronoi(map, pointdata) {
 
 
 };
+
+function newPlacesSearch(keyword) {
+    var chiswick = new google.maps.LatLng(51.495118, -0.273496);
+    var request = {
+	location: chiswick,
+	radius: 5000,
+	keyword: keyword
+    };
+    var service = new google.maps.places.PlacesService(map);
+    service.nearbySearch(request, callback);
+}
 
     </script>
   </head>
