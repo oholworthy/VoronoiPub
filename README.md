@@ -1,6 +1,6 @@
 Hacked together at a [West London Hack Night](http://www.meetup.com/West-London-Hack-Night/events/192445532/)
 
-Should be viewable at http://voronoipub.github.io/
+Should be viewable at http://lucymhdavies.github.io/voronoipub/
 
 Almost entirely stolen from:
 
