@@ -11,19 +11,59 @@
         padding: 0px
       }
     </style>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places"></script>
+    <style type="text/css">
+html, body{
+    margin: 0px;
+    padding: 0px;
+}
+html, body, #map_canvas {
+	width: 100%;
+	height: 100%;
+}
+
+.SvgOverlay {
+	position: relative;
+	width: 900px;
+	height: 600px;
+}
+
+.SvgOverlay svg {
+	position: absolute;
+	top: -4000px;
+	left: -4000px;
+	width: 8000px;
+	height: 8000px;
+}
+
+.q0-9 { fill: rgb(197,27,125); }
+.q1-9 { fill: rgb(222,119,174); }
+.q2-9 { fill: rgb(241,182,218); }
+.q3-9 { fill: rgb(253,224,239); }
+.q4-9 { fill: rgb(247,247,247); }
+.q5-9 { fill: rgb(230,245,208); }
+.q6-9 { fill: rgb(184,225,134); }
+.q7-9 { fill: rgb(127,188,65); }
+.q8-9 { fill: rgb(77,146,33); }
+
+</style>
     <script>
 var map;
 var infowindow;
+var chiswick = new google.maps.LatLng(51.495118, -0.273496);
+var overlay;
 
 function initialize() {
-  var chiswick = new google.maps.LatLng(51.495118, -0.273496);
-
   map = new google.maps.Map(document.getElementById('map-canvas'), {
     center: chiswick,
     zoom: 15
   });
 
+  doRequest();
+}
+
+function doRequest() {
   var request = {
     location: chiswick,
     radius: 5000,
@@ -31,7 +71,7 @@ function initialize() {
   };
   infowindow = new google.maps.InfoWindow();
   var service = new google.maps.places.PlacesService(map);
-  service.nearbySearch(request, callback);
+  service.radarSearch(request, callback);
 }
 
 function callback(results, status) {
@@ -40,6 +80,7 @@ function callback(results, status) {
 		createMarker(results[i]);
 		console.log( "Found something at Lat: " + results[i].geometry.location.B + ", Long: " + results[i].geometry.location.k );
     }
+      overlayVoronoi(map, results);
   }
 }
 
@@ -48,8 +89,9 @@ function createMarker(place) {
   var marker = new google.maps.Marker({
     map: map,
     icon: {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 4
+      url: 'beer.png',
+      size: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16)
     },
     position: place.geometry.location
   });
@@ -61,6 +103,74 @@ function createMarker(place) {
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
+
+
+function overlayVoronoi(map, pointdata) {
+
+	overlay = new google.maps.OverlayView();
+
+	overlay.onAdd = function () {
+
+		var layer = d3.select(this.getPanes().overlayLayer).append("div").attr("class", "SvgOverlay");
+		var svg = layer.append("svg");
+		var svgoverlay = svg.append("g").attr("class", "AdminDivisions");
+
+		overlay.draw = function () {
+			var markerOverlay = this;
+			var overlayProjection = markerOverlay.getProjection();
+
+			var googleMapProjection = function (coordinates) {
+			    console.log("googleMapProjection");
+			    console.log(coordinates);
+				var googleCoordinates = new google.maps.LatLng(coordinates.k, coordinates.B);
+				var pixelCoordinates = overlayProjection.fromLatLngToDivPixel(googleCoordinates);
+				return [pixelCoordinates.x + 4000, pixelCoordinates.y + 4000];
+			}
+
+			var positions = [];
+
+			pointdata.forEach(function(d) {
+			    positions.push(googleMapProjection(d.geometry.location));
+			});
+
+			var polygons = d3.geom.voronoi(positions);
+
+			var pathAttr ={
+				"d":function(d, i) { return "M" + polygons[i].join("L") + "Z"},
+			        opacity: 0.3,
+				stroke:"black",
+			        "stroke-width": 2
+			};
+
+			svgoverlay.selectAll("path")
+				.data(pointdata)
+				.attr(pathAttr)
+				.enter()
+				.append("svg:path")
+				.attr("class", "cell")
+			        .attr("class", function(d, i) { return "q" + (i % 9) + "-9"; })
+				.attr(pathAttr)
+
+
+		};
+
+	};
+
+	overlay.setMap(map);
+
+
+};
+
+function newPlacesSearch(keyword) {
+    var chiswick = new google.maps.LatLng(51.495118, -0.273496);
+    var request = {
+	location: chiswick,
+	radius: 5000,
+	keyword: keyword
+    };
+    var service = new google.maps.places.PlacesService(map);
+    service.nearbySearch(request, callback);
+}
 
     </script>
   </head>
